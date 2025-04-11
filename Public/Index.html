@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Referral Assistant 🚀</title>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #4a90e2;
+        --primary-hover: #357abd;
+        --secondary-color: #3d434a;
+        --background-light: #f7f9fc;
+        --card-bg-light: #ffffff;
+        --card-bg-gradient: linear-gradient(135deg, #ffffff, #f8fbfd);
+        --text-light: #34495e;
+        --border-color: #e0e0e0;
+      }
+      body {
+        font-family: "Roboto", Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: var(--background-light);
+        color: var(--text-light);
+        line-height: 1.6;
+      }
+      .container {
+        width: 95%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .main-panel {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .referral-reputation-label {
+        font-size: 1.2em;
+        font-weight: 500;
+      }
+      .points-number {
+        font-size: 2em;
+        margin: 10px 0;
+      }
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .quest-btn {
+        background: var(--card-bg-gradient);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background 0.3s;
+        flex: 1 1 40%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .quest-btn:hover {
+        background: var(--card-bg-light);
+      }
+      .stripe {
+        margin-right: 5px;
+      }
+      .links-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      .single-link-card {
+        background: var(--card-bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .remove-link-btn {
+        background: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .remove-link-btn:hover {
+        background: var(--primary-hover);
+      }
+      .add-referral-btn {
+        background: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 15px;
+        cursor: pointer;
+      }
+      .add-referral-btn:hover {
+        background: var(--primary-hover);
+      }
+      .ranking-position {
+        font-weight: bold;
+        width: 30px;
+        text-align: center;
+      }
+      .ranking-first {
+        color: gold;
+      }
+      .ranking-second {
+        color: silver;
+      }
+      .ranking-third {
+        color: #cd7f32;
+      }
+      .ranking-card {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 5px;
+      }
+      .ranking-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin: 0 10px;
+      }
+      .ranking-info {
+        flex: 1;
+      }
+      .spinner {
+        border: 4px solid var(--border-color);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: auto;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <!-- External Scripts -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <body>
+    <!-- Panel Superior (Estadísticas) -->
+    <div class="container main-panel">
+      <div id="total-points">
+        <div class="referral-reputation-label">Your Referral Reputation</div>
+        <div class="points-number">#0</div>
+      </div>
+      <p>Raise your reputation to get more clicks.</p>
+      <p>
+        Today: <span id="today-points" class="highlight">+0</span>
+      </p>
+    </div>
+    <!-- Botones Principales -->
+    <div class="container">
+      <div class="btn-row">
+        <button id="visit-link-button" class="quest-btn" aria-label="Visit Link">
+          <div class="stripe"><i class="fas fa-eye"></i></div>
+          <div class="quest-text">Visit Link</div>
+        </button>
+        <button id="daily-bonus-button" class="quest-btn" aria-label="Daily Bonus">
+          <div class="stripe"><i class="fas fa-gift"></i></div>
+          <div class="quest-text">Daily Bonus</div>
+        </button>
+        <button id="show-ranking-button" class="quest-btn" aria-label="Show Ranking">
+          <div class="stripe"><i class="fas fa-chart-bar"></i></div>
+          <div class="quest-text">Ranking</div>
+        </button>
+        <button id="friends-button" class="quest-btn" aria-label="Friends">
+          <div class="stripe"><i class="fas fa-user-friends"></i></div>
+          <div class="quest-text">Friends</div>
+        </button>
+      </div>
+    </div>
+    <!-- Sección de Links -->
+    <div class="container" id="my-links-section">
+      <div class="links-grid" id="links-grid">
+        <!-- Tarjetas generadas vía JavaScript -->
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button id="add-link-button" class="add-referral-btn" aria-label="Add Referral Link">
+          <i class="fas fa-plus-circle"></i> Add Referral Link
+        </button>
+      </div>
+    </div>
+    <!-- Sección Ranking (Modal) -->
+    <div class="container" id="ranking-section" style="display: none;">
+      <h2><i class="fas fa-trophy"></i> Ranking</h2>
+    </div>
+    <script>
+      "use strict";
+      
+      // Actualizamos la URL de la API para que apunte a la función serverless en Vercel
+      const API_URL = "/api/users";
+      
+      // Obtenemos el objeto de Telegram y expandimos la web app
+      const tg = window.Telegram.WebApp || {};
+      if (typeof tg.expand === "function") { tg.expand(); }
+      const telegramUser = (tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+
+      /* ========= Funciones para interactuar con la API ========= */
+      async function fetchUser(userId) {
+        const response = await fetch(`${API_URL}/${userId}`);
+        if (response.ok) {
+          return await response.json();
+        } else {
+          console.error("Error fetching user", response.status);
+          return null;
+        }
+      }
+
+      async function registerUser(userData) {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData)
+        });
+        if (response.ok) {
+          return await response.json();
+        } else {
+          console.error("Error registering user", response.status);
+          return null;
+        }
+      }
+
+      async function updateUser(userId, updatedData) {
+        const response = await fetch(`${API_URL}/${userId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedData)
+        });
+        if (response.ok) {
+          return await response.json();
+        } else {
+          console.error("Error updating user", response.status);
+          return null;
+        }
+      }
+
+      /* ========= Helpers ========= */
+      function extractBotName(url) {
+        try {
+          const urlObj = new URL(url);
+          const match = urlObj.pathname.match(/^\/([^\/]+)/);
+          return (match && match[1]) ? match[1].toLowerCase() : "unknown_bot";
+        } catch (error) {
+          console.error("Error extracting bot name:", error);
+          return "unknown_bot";
+        }
+      }
+
+      function showError(title, message) {
+        Swal.fire(title, message, "error");
+      }
+
+      function formatTime(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      /* ========= Gestión de Usuario mediante la API ========= */
+      async function autoRegisterUser() {
+        let userId = telegramUser && telegramUser.id
+          ? telegramUser.id.toString()
+          : "user_" + Math.random().toString(36).substring(2, 15);
+      
+        let user = await fetchUser(userId);
+        if (user) return user;
+      
+        const name = (telegramUser.first_name || "") + (telegramUser.last_name ? " " + telegramUser.last_name : "");
+        const userPhoto = telegramUser.photo_url || "https://via.placeholder.com/40";
+      
+        const newUserData = {
+          id: userId,
+          name: name.trim() || "Unknown",
+          username: telegramUser.username || "",
+          photo: userPhoto,
+          points: 0,
+          todayPoints: 0,
+          registeredAt: Date.now(),
+          lastSeen: Date.now(),
+          friendsInvited: 0,
+          links: "[]", // Los enlaces se almacenan como cadena JSON
+          lastBonus: 0,
+          lastReset: new Date().toDateString()
+        };
+        await registerUser(newUserData);
+        return newUserData;
+      }
+
+      async function getUserData() {
+        const userId = telegramUser && telegramUser.id ? telegramUser.id.toString() : null;
+        if (!userId) return null;
+        return await fetchUser(userId);
+      }
+
+      async function saveUserData(updatedData) {
+        const userId = updatedData.id;
+        // Actualizamos también la marca del último visto
+        updatedData.lastSeen = Date.now();
+        await updateUser(userId, updatedData);
+      }
+
+      /* ========= Funciones adicionales ========= */
+      async function getGlobalLinks() {
+        const response = await fetch(API_URL);
+        const allUsers = await response.json();
+        const globalLinks = [];
+        allUsers.forEach((data) => {
+          let links;
+          try {
+            links = JSON.parse(data.links);
+          } catch (err) {
+            links = [];
+          }
+          if (Array.isArray(links)) {
+            links.forEach((linkItem) => {
+              let url = typeof linkItem === "object" && linkItem.url
+                ? linkItem.url
+                : typeof linkItem === "string"
+                ? linkItem
+                : "";
+              if (url) {
+                globalLinks.push({ link: url, points: Number(data.points) || 0 });
+              }
+            });
+          }
+        });
+        return globalLinks;
+      }
+
+      async function calculateRanking() {
+        const response = await fetch(API_URL);
+        const allUsers = await response.json();
+        const users = allUsers.map((data) => ({
+          id: data.id,
+          name: data.name || "Unknown",
+          points: Number(data.points) || 0,
+          photo: data.photo || "https://via.placeholder.com/40",
+          registeredAt: Number(data.registeredAt) || Date.now()
+        }));
+        users.sort((a, b) =>
+          b.points === a.points
+            ? a.registeredAt - b.registeredAt
+            : b.points - a.points
+        );
+        return users;
+      }
+
+      async function processReferralBonus(currentUserId) {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const referrerId = urlParams.get("startapp");
+          if (referrerId && referrerId !== currentUserId) {
+            const user = await getUserData();
+            user.points = Number(user.points) + 50;
+            user.todayPoints = Number(user.todayPoints) + 50;
+            await saveUserData(user);
+          }
+        } catch (error) {
+          console.error("Error processing referral bonus:", error);
+        }
+      }
+
+      async function updateTopPanel() {
+        const user = await getUserData();
+        if (user) {
+          document.getElementById("total-points").innerHTML = `
+            <div class="referral-reputation-label">Your Referral Reputation</div>
+            <div class="points-number">#${user.points}</div>
+          `;
+          document.getElementById("today-points").innerText = "+" + user.todayPoints;
+        }
+      }
+
+      async function renderUserLinks() {
+        const user = await getUserData();
+        const container = document.getElementById("links-grid");
+        container.innerHTML = "";
+        if (!user || !user.links) {
+          container.innerHTML = "<p style='text-align:center; width:100%;'>No links added yet.</p>";
+          return;
+        }
+        let links;
+        try {
+          links = JSON.parse(user.links);
+        } catch (e) {
+          links = [];
+        }
+        if (Array.isArray(links) && links.length > 0) {
+          links.forEach((linkItem, index) => {
+            const url = (typeof linkItem === "object" ? linkItem.url : linkItem) || "";
+            const clicks = typeof linkItem === "object" && linkItem.clicks ? linkItem.clicks : 0;
+            const botName = extractBotName(url);
+            const infoText = `${clicks} clicks`;
+            const card = document.createElement("div");
+            card.className = "single-link-card";
+            card.innerHTML = `
+              <h3><i class="fas fa-robot"></i> ${botName}</h3>
+              <div class="link-info">${infoText}</div>
+              <button class="remove-link-btn" onclick="removeLink(${index})" aria-label="Delete Link">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            `;
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = "<p style='text-align:center; width:100%;'>No links added yet.</p>";
+        }
+      }
+
+      async function removeLink(index) {
+        const user = await getUserData();
+        let links;
+        try {
+          links = JSON.parse(user.links);
+        } catch (e) {
+          links = [];
+        }
+        links.splice(index, 1);
+        user.links = JSON.stringify(links);
+        await saveUserData(user);
+        renderUserLinks();
+        updateTopPanel();
+      }
+      window.removeLink = removeLink;
+
+      async function showRanking() {
+        try {
+          const users = await calculateRanking();
+          const currentUserId = telegramUser && telegramUser.id ? telegramUser.id.toString() : "";
+          const currentUserIndex = users.findIndex((u) => u.id === currentUserId) + 1;
+          let htmlContent = `<div style="text-align: center;">`;
+          htmlContent += `<p style="font-size: 1em; color: var(--secondary-color); margin-bottom: 10px;">Your position: #${currentUserIndex}</p>`;
+          htmlContent += `<div style="max-height: 400px; overflow-y: auto;">`;
+          users.forEach((user, index) => {
+            let positionLabel = `<div class="ranking-position">${index + 1}</div>`;
+            if (index === 0) {
+              positionLabel = `<div class="ranking-position ranking-first">${index + 1}</div>`;
+            } else if (index === 1) {
+              positionLabel = `<div class="ranking-position ranking-second">${index + 1}</div>`;
+            } else if (index === 2) {
+              positionLabel = `<div class="ranking-position ranking-third">${index + 1}</div>`;
+            }
+            htmlContent += `
+              <div class="ranking-card">
+                ${positionLabel}
+                <img class="ranking-avatar" src="${user.photo}" alt="${user.name}" />
+                <div class="ranking-info">
+                  <strong>${user.name}</strong><br/>
+                  <span>${user.points} points</span>
+                </div>
+              </div>
+            `;
+          });
+          htmlContent += `</div></div>`;
+          Swal.fire({
+            title: "Ranking 🏆",
+            html: htmlContent,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: "100%",
+            customClass: { popup: "swal-fullscreen" }
+          });
+        } catch (error) {
+          console.error("Error displaying ranking:", error);
+          showError("Error", "Could not display ranking. Please try again later.");
+        }
+      }
+      window.showRanking = showRanking;
+
+      async function addLink() {
+        const { value: link } = await Swal.fire({
+          title: "Add Link 🔗",
+          input: "text",
+          inputLabel: "Enter your Telegram URL",
+          inputPlaceholder: "https://t.me/your_bot_or_channel",
+          showCancelButton: true,
+          confirmButtonText: "Add ➕",
+          cancelButtonText: "Cancel",
+          inputValidator: (value) => {
+            if (!value) return "You must enter a link! 🚫";
+            const pattern = /^https:\/\/t\.me\/.+$/;
+            if (!pattern.test(value)) return "Enter a valid Telegram link starting with https://t.me 🚫";
+          }
+        });
+        if (link) {
+          const user = await getUserData();
+          let links;
+          try {
+            links = JSON.parse(user.links);
+          } catch (e) {
+            links = [];
+          }
+          links.push({ url: link, clicks: 0 });
+          user.links = JSON.stringify(links);
+          await saveUserData(user);
+          Swal.fire("Link Added! ✅", `You added: ${link}`, "success");
+          renderUserLinks();
+        }
+      }
+      window.addLink = addLink;
+
+      window.openGlobalReferralLink = async (link, btnElement) => {
+        try {
+          const user = await getUserData();
+          user.points = Number(user.points) + 10;
+          user.todayPoints = Number(user.todayPoints) + 10;
+          await saveUserData(user);
+          await updateTopPanel();
+          const newWindow = window.open(link, "_blank");
+          if (!newWindow) throw new Error("Popup blocked or unable to open new window");
+          btnElement.disabled = true;
+          btnElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+          setTimeout(() => {
+            btnElement.innerHTML = `<i class="fas fa-check" style="color: green;"></i> Done`;
+          }, 5000);
+          const pollTimer = setInterval(() => {
+            try {
+              if (newWindow.closed) {
+                clearInterval(pollTimer);
+                updateTopPanel();
+              }
+            } catch (error) {
+              console.error("Error polling new window:", error);
+              clearInterval(pollTimer);
+            }
+          }, 500);
+        } catch (error) {
+          console.error("Error opening global referral link:", error);
+          showError("Error", "Could not open the referral link. Please try again.");
+        }
+      };
+
+      async function claimDailyBonus() {
+        try {
+          const user = await getUserData();
+          if (!user) return;
+          const lastBonus = Number(user.lastBonus) || 0;
+          const currentTime = Date.now();
+          const hoursPassed = (currentTime - lastBonus) / (1000 * 60 * 60);
+          if (hoursPassed < 24) {
+            let remainingTime = 24 * 3600 - Math.floor((currentTime - lastBonus) / 1000);
+            Swal.fire({
+              title: "Wait ⏳",
+              html: `<div class="spinner"></div><br/><strong id="timer-display">${formatTime(remainingTime)}</strong>`,
+              icon: "warning",
+              showCloseButton: true,
+              didOpen: () => {
+                const timerInterval = setInterval(() => {
+                  remainingTime--;
+                  if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    Swal.close();
+                  } else {
+                    document.getElementById("timer-display").innerHTML = formatTime(remainingTime);
+                  }
+                }, 1000);
+              }
+            });
+            return;
+          }
+          const bonusPoints = Math.floor(Math.random() * 50) + 1;
+          user.points = Number(user.points) + bonusPoints;
+          user.todayPoints = Number(user.todayPoints) + bonusPoints;
+          user.lastBonus = currentTime;
+          await saveUserData(user);
+          await updateTopPanel();
+          Swal.fire({
+            title: "Bonus Claimed! 🎉",
+            text: `You received ${bonusPoints} points.`,
+            icon: "success",
+            showCloseButton: true
+          });
+        } catch (error) {
+          console.error("Error claiming daily bonus:", error);
+          showError("Error", "Could not claim your bonus. Please try again later.");
+        }
+      }
+
+      async function showReferralOptions() {
+        try {
+          const links = await getGlobalLinks();
+          if (!links || links.length === 0) {
+            Swal.fire("No Links", "No links found to visit. 😕", "info");
+            return;
+          }
+          links.sort((a, b) => b.points - a.points);
+          const mid = Math.ceil(links.length / 2);
+          const highGroup = links.slice(0, mid);
+          const lowGroup = links.slice(mid);
+          shuffleArray(highGroup);
+          shuffleArray(lowGroup);
+          let interleaved = [];
+          while (highGroup.length > 0 && lowGroup.length > 0) {
+            interleaved.push(Math.random() < 0.5 ? highGroup.shift() : lowGroup.shift());
+          }
+          interleaved = interleaved.concat(highGroup, lowGroup);
+          let cardsHTML = `<div class="referral-card-container" style="max-height: 400px; overflow-y: auto;">`;
+          interleaved.forEach((item) => {
+            const botName = extractBotName(item.link);
+            cardsHTML += `
+              <div class="referral-card">
+                <h3><i class="fas fa-robot"></i> ${botName}</h3>
+                <p>+10 Points <i class="fas fa-gem"></i></p>
+                <button class="referral-open-btn" onclick="openGlobalReferralLink('${item.link}', this)" aria-label="Open Referral Link">
+                  <i class="fas fa-external-link-alt"></i> Open
+                </button>
+              </div>
+            `;
+          });
+          cardsHTML += `</div>`;
+          Swal.fire({
+            title: "Referral Links Listing 🔗",
+            html: `<p style="margin-bottom: 15px; font-weight: bold; font-size:0.8em;">Boost your links by opening other people’s apps</p>` + cardsHTML,
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: 360
+          });
+        } catch (error) {
+          console.error("Error showing referral options:", error);
+          showError("Error", "Could not display referral options. Please try again later.");
+        }
+      }
+
+      /* ========= Asignación de Eventos ========= */
+      document.getElementById("add-link-button").addEventListener("click", addLink);
+      document.getElementById("visit-link-button").addEventListener("click", showReferralOptions);
+      document.getElementById("daily-bonus-button").addEventListener("click", claimDailyBonus);
+      document.getElementById("show-ranking-button").addEventListener("click", showRanking);
+      document.getElementById("friends-button").addEventListener("click", () => {
+        const referralLink =
+          "https://t.me/Refferalassistant_bot/Reffasist?startapp=" +
+          (telegramUser && telegramUser.id ? telegramUser.id : "");
+        const infoText = `
+          <div style="text-align: left; font-size: 0.9em;">
+            <p><strong>Share Your Referral Link!</strong></p>
+            <p>Every friend who joins earns you <span style="color: var(--primary-color);">+50 REP</span>!</p>
+            <hr>
+            <p><strong>Your Referral Link:</strong></p>
+            <input id="referral-link-input" type="text" value="${referralLink}" readonly style="width:100%; padding:5px; font-size:0.9em; border:1px solid #ccc; border-radius:4px;">
+            <p style="margin-top:10px;">Copy the link below to share it with your friends.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+              <button id="copy-link-btn" class="add-referral-btn" style="padding: 8px 12px;" aria-label="Copy Referral Link">
+                <i class="fas fa-copy"></i> Copy Link
+              </button>
+            </div>
+          </div>
+        `;
+        Swal.fire({
+          title: "Invite Your Friends",
+          html: infoText,
+          showConfirmButton: false,
+          showCloseButton: true,
+          width: 400
+        }).then(() => {});
+        document.getElementById("copy-link-btn").addEventListener("click", () => {
+          const referralInput = document.getElementById("referral-link-input");
+          referralInput.select();
+          referralInput.setSelectionRange(0, 99999);
+          navigator.clipboard
+            .writeText(referralInput.value)
+            .then(() => {
+              Swal.fire("Copied!", "Your referral link has been copied to the clipboard.", "success");
+            })
+            .catch((err) => {
+              console.error("Error copying referral link:", err);
+              showError("Error", "Could not copy link. Please copy manually.");
+            });
+        });
+      });
+
+      /* ========= Inicialización ========= */
+      async function init() {
+        const user = await autoRegisterUser();
+        await processReferralBonus(user.id);
+        await updateTopPanel();
+        await renderUserLinks();
+      }
+      init();
+    </script>
+  </body>
+</html>
